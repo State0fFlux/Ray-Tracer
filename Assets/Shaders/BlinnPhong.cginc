@@ -55,19 +55,21 @@ fixed4 MyFragmentProgram(v2f i) : SV_Target
     // directional vectors (camera view, normal, light)
 
     float4 color = float4(0, 0, 0, 1);
-    color.rgb += _EmissionColor.rgb;
 
     float3 L = float3(0, 0, 0); // Light direction
     
     
     float r = length(_WorldSpaceLightPos0.xyz - i.worldPos); // calculate the length of the vector between the light and vertex
-    float distAttenuation = 1/(r*r); // (1)
+    float distAttenuation = 1/(1+r*r); // (1)
 
     if (_WorldSpaceLightPos0.w != 0.0) // this is point light
     {
         L = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
     }
     float3 N = normalize(i.worldNormal);
+
+    // Emissive component
+    float3 emmissive = _EmissionColor.rgb;
 
     // Diffuse component
     float diffuseShade = max(dot(N, L), 0.0);
@@ -81,9 +83,9 @@ fixed4 MyFragmentProgram(v2f i) : SV_Target
 
 
     // Ambient component (3)
-    float3 ambient = UNITY_LIGHTMODEL_AMBIENT;
+    float3 ambient = UNITY_LIGHTMODEL_AMBIENT * _DiffuseColor.rgb;
 
-    color.rgb += ambient + diffuse + specular;
+    color.rgb += emmissive + ambient + diffuse + specular;
 
     return color;
 }
